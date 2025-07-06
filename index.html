@@ -2,153 +2,39 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>コード実行エディタ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>コード公開サイト</title>
   <style>
-    :root {
-      --bg: #ffffff;
-      --text: #000000;
-      --button-bg: #007bff;
-      --button-text: #ffffff;
-    }
-    [data-theme="dark"] {
-      --bg: #1e1e1e;
-      --text: #f0f0f0;
-      --button-bg: #444;
-      --button-text: #fff;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: sans-serif;
-      margin: 0;
-      padding: 1rem;
-    }
-
-    textarea {
-      width: 32%;
-      height: 200px;
-      margin: 0.5%;
-      padding: 0.5rem;
-      font-family: monospace;
-      background: #f8f8f8;
-    }
-
-    iframe {
-      width: 100%;
-      height: 400px;
-      margin-top: 1rem;
-      border: 1px solid #ccc;
-      background: white;
-    }
-
-    button {
-      padding: 0.5rem 1rem;
-      margin-right: 1rem;
-      margin-top: 1rem;
-      font-size: 1rem;
-      background-color: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      cursor: pointer;
-    }
-
-    .btn-group {
-      margin-top: 1rem;
-    }
-
-    @media (max-width: 768px) {
-      textarea {
-        width: 100%;
-        height: 150px;
-      }
-    }
+    textarea { width: 100%; height: 200px; font-family: monospace; }
+    iframe { width: 100%; height: 400px; margin-top: 1rem; border: 1px solid #ccc; }
+    button { margin-top: 1rem; }
   </style>
 </head>
 <body>
-  <h1>💻 コード実行エディタ</h1>
-
-  <div>
-    <textarea id="html" placeholder="HTMLを書く"></textarea>
-    <textarea id="css" placeholder="CSSを書く"></textarea>
-    <textarea id="js" placeholder="JavaScriptを書く"></textarea>
-  </div>
-
-  <div class="btn-group">
-    <button onclick="runCode()">▶ 実行</button>
-    <button onclick="shareCode()">🔗 共有URL生成</button>
-    <button onclick="toggleTheme()">🌙/☀️ テーマ切替</button>
-  </div>
-
+  <h1>コードを入力して公開！</h1>
+  <textarea id="code" placeholder="HTML/CSS/JS を書く"></textarea>
+  <br>
+  <button onclick="generateURL()">🔗 公開URLを生成</button>
   <iframe id="preview"></iframe>
 
   <script>
-    const htmlEl = document.getElementById("html");
-    const cssEl = document.getElementById("css");
-    const jsEl = document.getElementById("js");
+    const textarea = document.getElementById("code");
     const iframe = document.getElementById("preview");
 
-    function runCode() {
-      const html = htmlEl.value;
-      const css = cssEl.value;
-      const js = jsEl.value;
-
-      const output = `
-        <html>
-          <head><style>${css}</style></head>
-          <body>
-            ${html}
-            <script>${js}<\/script>
-          </body>
-        </html>
-      `;
-      iframe.srcdoc = output;
-
-      // Save to localStorage
-      localStorage.setItem("saved-html", html);
-      localStorage.setItem("saved-css", css);
-      localStorage.setItem("saved-js", js);
+    // URLパラメータがある場合は表示
+    if (location.hash.startsWith("#code=")) {
+      const encoded = location.hash.replace("#code=", "");
+      const decoded = decodeURIComponent(atob(encoded));
+      textarea.value = decoded;
+      iframe.srcdoc = decoded;
     }
 
-    function shareCode() {
-      const html = encodeURIComponent(htmlEl.value);
-      const css = encodeURIComponent(cssEl.value);
-      const js = encodeURIComponent(jsEl.value);
-      const url = `${location.origin}${location.pathname}?html=${html}&css=${css}&js=${js}`;
-      prompt("このURLを共有できます👇", url);
+    function generateURL() {
+      const code = textarea.value;
+      const encoded = btoa(encodeURIComponent(code));
+      const url = `${location.origin}${location.pathname}#code=${encoded}`;
+      prompt("このURLを共有できます", url);
+      iframe.srcdoc = code;
     }
-
-    function loadFromParams() {
-      const params = new URLSearchParams(location.search);
-      if (params.has("html")) htmlEl.value = decodeURIComponent(params.get("html"));
-      if (params.has("css")) cssEl.value = decodeURIComponent(params.get("css"));
-      if (params.has("js")) jsEl.value = decodeURIComponent(params.get("js"));
-    }
-
-    function loadFromLocal() {
-      if (localStorage.getItem("saved-html")) htmlEl.value = localStorage.getItem("saved-html");
-      if (localStorage.getItem("saved-css")) cssEl.value = localStorage.getItem("saved-css");
-      if (localStorage.getItem("saved-js")) jsEl.value = localStorage.getItem("saved-js");
-    }
-
-    function toggleTheme() {
-      const current = document.documentElement.getAttribute("data-theme");
-      const newTheme = current === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", newTheme);
-      localStorage.setItem("theme", newTheme);
-    }
-
-    function loadTheme() {
-      const savedTheme = localStorage.getItem("theme") || "light";
-      document.documentElement.setAttribute("data-theme", savedTheme);
-    }
-
-    // 初期化
-    loadTheme();
-    loadFromParams();
-    if (!location.search) loadFromLocal();
-    runCode();
   </script>
 </body>
 </html>
